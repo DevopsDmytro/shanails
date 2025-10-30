@@ -1,0 +1,53 @@
+#### Приклади даних для тестування:
+
+1. Тест гілки `check_client` (існуючий клієнт):
+
+{
+  "body": {
+    "action": "check_client",
+    "telegram_id": "1656854173"
+  }
+}
+
+2. Тест гілки `check_client` (новий клієнт):
+
+{
+  "body": {
+    "action": "check_client",
+    "telegram_id": "999999999"
+  }
+}
+
+3. Тест гілки `register_client`:
+
+{
+  "body": {
+    "action": "register_client",
+    "telegram_id": "123456789",
+    "name": "Тестовий Клієнт",
+    "phone": "380991234567"
+  }
+}
+
+4. Тест гілки `get_free_slots`:
+
+{
+  "body": {
+    "action": "get_free_slots",
+    "master": "Анна",
+    "date": "2025-10-21"
+  }
+}
+
+5. Тест гілки `create_appointment`:
+
+{
+  "body": {
+    "action": "create_appointment",
+    "telegram_id": "1656854173",
+    "master": "Анна",
+    "date": "2025-10-21",
+    "time": "10:00",
+    "services": ["Комплекс (зняття, манікюр, покриття)"]
+  }
+}

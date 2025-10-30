@@ -1,0 +1,75 @@
+
+services:
+  # Service 1: Traefik (The Reverse Proxy)
+  traefik:
+    image: traefik:v2.9
+    restart: always
+    command:
+      # Enable Docker as a configuration provider
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      # Create two entry points: for HTTP and HTTPS traffic
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # Configure automatic SSL certificate generation
+      - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
+      - --certificatesresolvers.mytlschallenge.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json
+      # Configure automatic redirection from HTTP to HTTPS
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+    ports:
+      # Expose ports 80 and 443 to the outside world
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Persist the obtained SSL certificates on the host machine
+      - ./letsencrypt:/letsencrypt
+      # Allow Traefik to listen to Docker events (container start/stop)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Service 2: n8n
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    environment:
+      # Tell n8n which domain it's running on
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      # We can now safely enable secure cookies!
+      - N8N_SECURE_COOKIE=true
+    volumes:
+      # Persist n8n data
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      # Rule: if a request comes to our domain, route it to this container
+      - "traefik.http.routers.n8n.rule=Host(`${N8N_HOST}`)"
+      # Specify that this router works via the secure entry point (HTTPS)
+      - "traefik.http.routers.n8n.entrypoints=websecure"
+      # Tell Traefik to obtain an SSL certificate for this domain
+      - "traefik.http.routers.n8n.tls.certresolver=mytlschallenge"
+      # Specify that the service listens on port 5678 inside the Docker network
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+
+  # Service 3: Telegram Bot
+  manicure-bot:
+    build:
+      context: . # Build from the current directory (where Dockerfile is)
+    restart: always
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+    depends_on:
+      - n8n # Start the bot only after n8n has started
+
+volumes:
+  n8n_data:
+
+
