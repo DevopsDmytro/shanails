@@ -1,10 +1,10 @@
 # shanails Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-11-04
+Auto-generated from all feature plans. Last updated: 2025-11-07
 
 ## Active Technologies
 
-- Node.js 18+ LTS + Express.js, node-telegram-bot-api, Prisma ORM, node-cron, JWT (005-booking-system)
+- Python 3.11+ (Backend), JavaScript/TypeScript (Frontend) + FastAPI, SQLAlchemy, python-telegram-bot, SvelteKit/Vue.js, Vite, Nginx (006-spec-process)
 
 ## Project Structure
 
@@ -16,15 +16,15 @@ tests/
 
 ## Commands
 
-# Add commands for Node.js 18+ LTS
+cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] pytest [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] ruff check .
 
 ## Code Style
 
-Node.js 18+ LTS: Follow standard conventions
+Python 3.11+ (Backend), JavaScript/TypeScript (Frontend): Follow standard conventions
 
 ## Recent Changes
 
-- 005-booking-system: Added Node.js 18+ LTS + Express.js, node-telegram-bot-api, Prisma ORM, node-cron, JWT
+- 006-spec-process: Added Python 3.11+ (Backend), JavaScript/TypeScript (Frontend) + FastAPI, SQLAlchemy, python-telegram-bot, SvelteKit/Vue.js, Vite, Nginx
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

@@ -1,9 +1,9 @@
 <!--
 Sync Impact Report:
-Version change: 2.3 → 2.4.0 (MINOR: Added localization principle and expanded governance)
-Modified principles: None (all retained with clarified wording)
-Added sections: Localization (L10n) as Principle 6
-Removed sections: None
+Version change: 2.4.0 → 3.0.0 (MAJOR: Complete technology stack overhaul from Node.js to Python/FastAPI and modern frontend)
+Modified principles: All core technology principles updated to reflect actual project direction
+Added sections: None (restructured existing principles)
+Removed sections: None (replaced outdated technology constraints)
 Templates requiring updates: ✅ plan-template.md (already aligned), ✅ spec-template.md (already aligned), ✅ tasks-template.md (already aligned)
 Follow-up TODOs: None
 -->
@@ -13,22 +13,22 @@ Follow-up TODOs: None
 ## Core Principles
 
 ### I. PostgreSQL Database Architecture
-The single source of truth MUST be a PostgreSQL database. All data persistence, relationships, and transactions MUST be handled through PostgreSQL with proper schema design and migrations.
+The single source of truth MUST be a PostgreSQL database. All data persistence, relationships, and transactions MUST be handled through PostgreSQL with proper schema design and migrations using SQLAlchemy or SQLModel.
 
-### II. Node.js/Express Backend API
-A dedicated service MUST be built using Node.js and the Express.js framework. All business logic, API endpoints, and server-side operations MUST be implemented in this backend service.
+### II. Python/FastAPI Backend API
+A dedicated service MUST be built using Python 3.11+ with the FastAPI framework. All business logic, API endpoints, and server-side operations MUST be implemented in this backend service for optimal performance and developer experience.
 
-### III. Vite Vanilla JS Frontend
-A single, static web application MUST be built using Vite with vanilla JavaScript, HTML, and CSS. This application serves as BOTH the public website AND the Telegram Mini App. No frontend frameworks are permitted.
+### III. Modern Frontend Framework
+A Single Page Application (SPA) MUST be built using SvelteKit or Vue.js with Vite. This application serves as BOTH the public website AND the Telegram Mini App, optimized for mobile-first user experience and Telegram Mini App compatibility.
 
 ### IV. Telegram Bot Integration
-A Node.js service using `node-telegram-bot-api` MUST communicate exclusively with the Backend API. The bot MUST provide clean user interactions and message cleanup to avoid chat clutter.
+A Python service using `python-telegram-bot` MUST communicate exclusively with the Backend API. The bot MUST provide clean user interactions and message cleanup to avoid chat clutter, with seamless Mini App integration.
 
 ### V. Container-First Deployment
-The entire stack (Postgres, Backend, Frontend) MUST be containerized and orchestrated with a single `docker-compose.yml` file. Development and production environments MUST be managed through Docker Compose configurations.
+The entire stack (Postgres, Backend, Frontend) MUST be containerized and orchestrated with a single `docker-compose.yml` file. Development and production environments MUST be managed through Docker Compose configurations with Nginx as reverse proxy.
 
 ### VI. Ukrainian Localization (L10n)
-All user-facing text on all interfaces MUST be in Ukrainian. All internal code, comments, and variable names MUST remain in English. Localization MUST be implemented through dedicated locale files.
+All user-facing text on all interfaces MUST be in Ukrainian. All internal code, comments, and variable names MUST remain in English. Localization MUST be implemented through dedicated locale files with proper i18n framework support.
 
 ## Development Workflow
 
@@ -72,4 +72,4 @@ Constitution versions follow MAJOR.MINOR.PATCH format:
 - MINOR: New principles or substantial guidance additions
 - PATCH: Clarifications, wording fixes, non-semantic refinements
 
-**Version**: 2.4.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-04
+**Version**: 3.0.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-06

@@ -1,34 +1,22 @@
 {
-  "name": "shanails-frontend",
+  "name": "frontend",
   "version": "1.0.0",
-  "description": "Nail salon booking system frontend",
-  "type": "module",
+  "private": true,
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
+    "dev": "vite dev --host",
     "preview": "vite preview",
-    "test": "echo 'No tests specified yet'",
-    "lint": "eslint src --ext .js,.html",
-    "lint:fix": "eslint src --ext .js,.html --fix",
-    "format": "prettier --write src/**/*.{js,css,html}"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
   "devDependencies": {
-    "vite": "^5.0.0",
-    "eslint": "^8.54.0",
-    "eslint-config-prettier": "^9.0.0",
-    "prettier": "^3.1.0"
+    "@sveltejs/adapter-auto": "^7.0.0",
+    "@sveltejs/kit": "^2.48.4",
+    "@sveltejs/vite-plugin-svelte": "^6.2.1",
+    "@types/node": "^24.10.0",
+    "svelte": "^5.43.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.2"
   },
-  "dependencies": {},
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": [
-    "nail-salon",
-    "booking",
-    "vite",
-    "vanilla-js",
-    "telegram-mini-app"
-  ],
-  "author": "Shanails Team",
-  "license": "MIT"
+  "type": "module"
 }

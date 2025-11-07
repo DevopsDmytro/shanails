@@ -1,0 +1,1000 @@
+openapi: 3.0.3
+info:
+  title: Salon Booking System API
+  description: API for salon booking system with Telegram integration
+  version: 1.0.0
+  contact:
+    name: Salon Booking Team
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.salon.example.com/v1
+    description: Production server
+  - url: http://localhost:8000/v1
+    description: Development server
+
+paths:
+  # Authentication endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: User registration
+      description: Register new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # Masters endpoints
+  /masters:
+    get:
+      tags:
+        - Masters
+      summary: Get all masters
+      description: Retrieve list of all active masters
+      parameters:
+        - name: specialization
+          in: query
+          schema:
+            type: string
+          description: Filter by specialization
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Masters retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MastersResponse'
+
+  /masters/{master_id}:
+    get:
+      tags:
+        - Masters
+      summary: Get master by ID
+      description: Retrieve master details including schedule
+      parameters:
+        - name: master_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Master retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MasterResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /masters/{master_id}/availability:
+    get:
+      tags:
+        - Masters
+      summary: Get master availability
+      description: Get available time slots for a specific date
+      parameters:
+        - name: master_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date to check availability (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Availability retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Services endpoints
+  /services:
+    get:
+      tags:
+        - Services
+      summary: Get all services
+      description: Retrieve list of all active services
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by category
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Services retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicesResponse'
+
+  /services/{service_id}:
+    get:
+      tags:
+        - Services
+      summary: Get service by ID
+      description: Retrieve service details
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Appointments endpoints
+  /appointments:
+    get:
+      tags:
+        - Appointments
+      summary: Get user appointments
+      description: Retrieve appointments for authenticated user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled, completed, no_show]
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Appointments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Appointments
+      summary: Create appointment
+      description: Book a new appointment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppointmentRequest'
+      responses:
+        '201':
+          description: Appointment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /appointments/{appointment_id}:
+    get:
+      tags:
+        - Appointments
+      summary: Get appointment by ID
+      description: Retrieve appointment details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Appointment retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Appointments
+      summary: Update appointment
+      description: Update appointment details (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAppointmentRequest'
+      responses:
+        '200':
+          description: Appointment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags:
+        - Appointments
+      summary: Cancel appointment
+      description: Cancel an appointment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Appointment cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Reviews endpoints
+  /appointments/{appointment_id}/reviews:
+    post:
+      tags:
+        - Reviews
+      summary: Create review
+      description: Create a review for completed appointment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '201':
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /masters/{master_id}/reviews:
+    get:
+      tags:
+        - Reviews
+      summary: Get master reviews
+      description: Retrieve reviews for a specific master
+      parameters:
+        - name: master_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Admin endpoints
+  /admin/appointments:
+    get:
+      tags:
+        - Admin
+      summary: Get all appointments (admin)
+      description: Retrieve all appointments in the system
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled, completed, no_show]
+        - name: master_id
+          in: query
+          schema:
+            type: integer
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Appointments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/masters:
+    post:
+      tags:
+        - Admin
+      summary: Create master (admin)
+      description: Create a new master
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMasterRequest'
+      responses:
+        '201':
+          description: Master created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MasterResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /admin/services:
+    post:
+      tags:
+        - Admin
+      summary: Create service (admin)
+      description: Create a new service
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+      responses:
+        '201':
+          description: Service created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Authentication schemas
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        full_name:
+          type: string
+          minLength: 2
+        phone:
+          type: string
+        telegram_id:
+          type: integer
+        language_code:
+          type: string
+          default: uk
+
+    # User schemas
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        full_name:
+          type: string
+        phone:
+          type: string
+        is_active:
+          type: boolean
+        is_admin:
+          type: boolean
+        language_code:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # Master schemas
+    MasterResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        specialization:
+          type: string
+        description:
+          type: string
+        photo_url:
+          type: string
+        is_active:
+          type: boolean
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleResponse'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceResponse'
+        created_at:
+          type: string
+          format: date-time
+
+    CreateMasterRequest:
+      type: object
+      required:
+        - name
+        - specialization
+      properties:
+        name:
+          type: string
+          minLength: 2
+        specialization:
+          type: string
+          minLength: 2
+        description:
+          type: string
+        photo_url:
+          type: string
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateScheduleRequest'
+
+    MastersResponse:
+      type: object
+      properties:
+        masters:
+          type: array
+          items:
+            $ref: '#/components/schemas/MasterResponse'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # Service schemas
+    ServiceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        duration_minutes:
+          type: integer
+        price:
+          type: number
+          format: float
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    CreateServiceRequest:
+      type: object
+      required:
+        - name
+        - category
+        - duration_minutes
+        - price
+      properties:
+        name:
+          type: string
+          minLength: 2
+        description:
+          type: string
+        category:
+          type: string
+        duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 240
+        price:
+          type: number
+          minimum: 0
+
+    ServicesResponse:
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceResponse'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # Schedule schemas
+    ScheduleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        day_of_week:
+          type: integer
+          minimum: 0
+          maximum: 6
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_available:
+          type: boolean
+
+    CreateScheduleRequest:
+      type: object
+      required:
+        - day_of_week
+        - start_time
+        - end_time
+      properties:
+        day_of_week:
+          type: integer
+          minimum: 0
+          maximum: 6
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_available:
+          type: boolean
+          default: true
+
+    # Availability schemas
+    AvailabilityResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        available_slots:
+          type: array
+          items:
+            type: string
+            format: time
+        master:
+          $ref: '#/components/schemas/MasterResponse'
+
+    # Appointment schemas
+    AppointmentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        client:
+          $ref: '#/components/schemas/UserResponse'
+        master:
+          $ref: '#/components/schemas/MasterResponse'
+        service:
+          $ref: '#/components/schemas/ServiceResponse'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled, completed, no_show]
+        total_price:
+          type: number
+          format: float
+        total_duration_minutes:
+          type: integer
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateAppointmentRequest:
+      type: object
+      required:
+        - master_id
+        - service_id
+        - start_time
+      properties:
+        master_id:
+          type: integer
+        service_id:
+          type: integer
+        start_time:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    UpdateAppointmentRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled, completed, no_show]
+        notes:
+          type: string
+
+    AppointmentsResponse:
+      type: object
+      properties:
+        appointments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppointmentResponse'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # Review schemas
+    ReviewResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        appointment:
+          $ref: '#/components/schemas/AppointmentResponse'
+        client:
+          $ref: '#/components/schemas/UserResponse'
+        master:
+          $ref: '#/components/schemas/MasterResponse'
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        is_public:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    CreateReviewRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        is_public:
+          type: boolean
+          default: true
+
+    ReviewsResponse:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewResponse'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        average_rating:
+          type: number
+          format: float
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: object
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Masters
+    description: Master management and information
+  - name: Services
+    description: Service catalog and information
+  - name: Appointments
+    description: Appointment booking and management
+  - name: Reviews
+    description: Review management
+  - name: Admin
+    description: Administrative operations
