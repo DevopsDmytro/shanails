@@ -1,0 +1,34 @@
+{
+  "name": "shanails-frontend",
+  "version": "1.0.0",
+  "description": "Nail salon booking system frontend",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo 'No tests specified yet'",
+    "lint": "eslint src --ext .js,.html",
+    "lint:fix": "eslint src --ext .js,.html --fix",
+    "format": "prettier --write src/**/*.{js,css,html}"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.1.0"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "nail-salon",
+    "booking",
+    "vite",
+    "vanilla-js",
+    "telegram-mini-app"
+  ],
+  "author": "Shanails Team",
+  "license": "MIT"
+}

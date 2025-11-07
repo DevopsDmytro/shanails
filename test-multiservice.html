@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Service Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .service-item { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Multi-Service Booking Test</h1>
+    
+    <div class="test-section">
+        <h2>Available Services</h2>
+        <div id="services-list"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Multi-Service Selection</h2>
+        <div>
+            <label>Select Service 1:</label>
+            <select id="service1"></select>
+        </div>
+        <div>
+            <label>Select Service 2:</label>
+            <select id="service2"></select>
+        </div>
+        <button onclick="testMultiService()">Test Multi-Service</button>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Duration Validation</h2>
+        <button onclick="testDurationValidation()">Test >120min validation</button>
+        <div id="duration-results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        let allServices = [];
+
+        // Load services
+        async function loadServices() {
+            try {
+                const response = await fetch(`${API_BASE}/services`);
+                const data = await response.json();
+                allServices = data.data.services;
+                
+                // Display services
+                const servicesList = document.getElementById('services-list');
+                servicesList.innerHTML = allServices.map(service => `
+                    <div class="service-item">
+                        <strong>${service.name}</strong> - ${service.duration}min - ${service.price}грн
+                        <br><small>${service.description}</small>
+                    </div>
+                `).join('');
+                
+                // Populate select dropdowns
+                const service1Select = document.getElementById('service1');
+                const service2Select = document.getElementById('service2');
+                
+                const options = '<option value="">Select a service</option>' + 
+                    allServices.map(service => `<option value="${service.id}">${service.name} (${service.duration}min)</option>`).join('');
+                
+                service1Select.innerHTML = options;
+                service2Select.innerHTML = options;
+                
+            } catch (error) {
+                console.error('Error loading services:', error);
+                document.getElementById('services-list').innerHTML = '<div class="error">Error loading services</div>';
+            }
+        }
+
+        // Test multi-service functionality
+        async function testMultiService() {
+            const service1Id = document.getElementById('service1').value;
+            const service2Id = document.getElementById('service2').value;
+            const results = document.getElementById('test-results');
+            
+            if (!service1Id && !service2Id) {
+                results.innerHTML = '<div class="error">Please select at least one service</div>';
+                return;
+            }
+            
+            const selectedServiceIds = [service1Id, service2Id].filter(id => id);
+            const selectedServices = allServices.filter(service => selectedServiceIds.includes(service.id));
+            
+            const totalDuration = selectedServices.reduce((sum, service) => sum + service.duration, 0);
+            const totalPrice = selectedServices.reduce((sum, service) => sum + parseInt(service.price), 0);
+            
+            results.innerHTML = `
+                <h3>Multi-Service Test Results:</h3>
+                <div><strong>Selected Services:</strong></div>
+                ${selectedServices.map(service => `<div>- ${service.name} (${service.duration}min, ${service.price}грн)</div>`).join('')}
+                <div><strong>Total Duration:</strong> ${totalDuration} minutes</div>
+                <div><strong>Total Price:</strong> ${totalPrice} грн</div>
+                <div><strong>Duration Valid:</strong> ${totalDuration <= 120 ? '<span class="success">✅ Yes</span>' : '<span class="error">❌ No (>120min)</span>'}</div>
+            `;
+            
+            // Test backend availability endpoint
+            try {
+                const masterId = '1'; // Assuming master ID 1 exists
+                const availabilityResponse = await fetch(`${API_BASE}/masters/${masterId}/availability?serviceIds=${selectedServiceIds.join(',')}`);
+                const availabilityData = await availabilityResponse.json();
+                
+                results.innerHTML += `
+                    <h4>Backend Availability Test:</h4>
+                    <div><strong>Request:</strong> GET /masters/${masterId}/availability?serviceIds=${selectedServiceIds.join(',')}</div>
+                    <div><strong>Response Status:</strong> ${availabilityResponse.status}</div>
+                    <div><strong>Response Data:</strong> <pre>${JSON.stringify(availabilityData, null, 2)}</pre></div>
+                `;
+            } catch (error) {
+                results.innerHTML += `<div class="error">Backend availability test failed: ${error.message}</div>`;
+            }
+        }
+
+        // Test duration validation
+        async function testDurationValidation() {
+            const results = document.getElementById('duration-results');
+            
+            // Find services that exceed 120 minutes when combined
+            const longServices = allServices.filter(service => service.duration > 60);
+            
+            if (longServices.length < 2) {
+                results.innerHTML = '<div>Not enough long services to test >120min validation</div>';
+                return;
+            }
+            
+            const testService1 = longServices[0];
+            const testService2 = longServices[1] || longServices[0];
+            const totalDuration = testService1.duration + testService2.duration;
+            
+            results.innerHTML = `
+                <h3>Duration Validation Test:</h3>
+                <div><strong>Test Combination:</strong></div>
+                <div>- ${testService1.name}: ${testService1.duration}min</div>
+                <div>- ${testService2.name}: ${testService2.duration}min</div>
+                <div><strong>Total Duration:</strong> ${totalDuration} minutes</div>
+                <div><strong>Expected Result:</strong> ${totalDuration > 120 ? '<span class="error">Should be blocked</span>' : '<span class="success">Should be allowed</span>'}</div>
+            `;
+            
+            // Test backend validation
+            try {
+                const masterId = '1';
+                const serviceIds = [testService1.id, testService2.id];
+                const response = await fetch(`${API_BASE}/masters/${masterId}/availability?serviceIds=${serviceIds.join(',')}`);
+                const data = await response.json();
+                
+                if (response.status === 400 && data.error?.includes('120')) {
+                    results.innerHTML += '<div class="success">✅ Backend correctly blocked >120min booking</div>';
+                } else if (response.status === 200) {
+                    results.innerHTML += '<div class="success">✅ Backend allowed booking (duration ≤120min)</div>';
+                } else {
+                    results.innerHTML += `<div class="error">❌ Unexpected response: ${response.status}</div>`;
+                }
+                
+                results.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                results.innerHTML += `<div class="error">Backend validation test failed: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize
+        loadServices();
+    </script>
+</body>
+</html>

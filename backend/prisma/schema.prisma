@@ -1,0 +1,125 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            BigInt         @id @default(autoincrement())
+  telegramId    BigInt?        @unique
+  email         String?        @unique
+  phone         String?        @unique
+  firstName     String
+  lastName      String
+  role          UserRole       @default(CUSTOMER)
+  isActive      Boolean        @default(true)
+  isBlocked     Boolean        @default(false)
+  isUnreliable  Boolean        @default(false)
+  notes         String?
+  timezone      String         @default("Europe/Kyiv")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  appointments  Appointment[]
+  masterProfile MasterProfile?
+
+  @@map("users")
+}
+
+model Service {
+  id           BigInt        @id @default(autoincrement())
+  name         String
+  description  String?
+  price        Decimal       @db.Decimal(10, 2)
+  duration     Int
+  category     String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[] @relation("AppointmentToService")
+
+  @@map("services")
+}
+
+model MasterProfile {
+  id              BigInt        @id @default(autoincrement())
+  userId          BigInt        @unique
+  employeeCode    String        @unique
+  commissionRate  Decimal       @default(0.00) @db.Decimal(5, 2)
+  isActive        Boolean       @default(true)
+  specializations String[]
+  experience      Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  appointments    Appointment[]
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedules       Schedule[]
+
+  @@map("master_profiles")
+}
+
+model Schedule {
+  id        BigInt        @id @default(autoincrement())
+  masterId  BigInt
+  dayOfWeek Int
+  startTime DateTime
+  endTime   DateTime
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  master    MasterProfile @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@map("schedules")
+}
+
+model Appointment {
+  id                BigInt            @id @default(autoincrement())
+  customerId        BigInt
+  masterId          BigInt
+  serviceIds        BigInt[]
+  startTime         DateTime
+  endTime           DateTime
+  status            AppointmentStatus @default(SCHEDULED)
+  totalPrice        Decimal           @db.Decimal(10, 2)
+  customerNotes     String?
+  adminNotes        String?
+  reminderSent      Boolean           @default(false)
+  feedbackRequested Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  customer          User              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  master            MasterProfile     @relation(fields: [masterId], references: [id], onDelete: Cascade)
+  review            Review?
+  services          Service[]         @relation("AppointmentToService")
+
+  @@map("appointments")
+}
+
+model Review {
+  id            BigInt      @id @default(autoincrement())
+  appointmentId BigInt      @unique
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+enum UserRole {
+  CUSTOMER
+  MASTER
+  ADMIN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}

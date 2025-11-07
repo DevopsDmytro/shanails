@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Multi-Service Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .service-item { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .checkbox { margin-right: 10px; }
+        .summary { background: #e8f5e8; padding: 10px; margin: 10px 0; }
+        .warning { background: #ffe8e8; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Frontend Multi-Service Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>Service Selection (Multi-Select)</h2>
+        <div id="services-container"></div>
+        <div id="services-summary" class="summary" style="display: none;">
+            <h3>📋 Обрані послуги</h3>
+            <div id="selected-services-list"></div>
+            <div class="summary-totals">
+                <div><strong>Загальна тривалість:</strong> <span id="total-duration">0 хв</span></div>
+                <div><strong>Загальна вартість:</strong> <span id="total-price">0 грн</span></div>
+            </div>
+            <div id="duration-warning" class="warning" style="display: none;">
+                ⚠️ Загальна тривалість послуг не може перевищувати 2 години.
+            </div>
+            <button id="test-availability" disabled>Test Availability</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Availability Test Results</h2>
+        <div id="availability-results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        let allServices = [];
+        let selectedServices = [];
+
+        // Load services
+        async function loadServices() {
+            try {
+                const response = await fetch(`${API_BASE}/services`);
+                const data = await response.json();
+                allServices = data.data.services;
+                
+                // Display services with checkboxes
+                const container = document.getElementById('services-container');
+                container.innerHTML = allServices.map(service => `
+                    <div class="service-item">
+                        <input type="checkbox" class="checkbox" id="service-${service.id}" 
+                               value="${service.id}" onchange="handleServiceChange(${service.id})">
+                        <label for="service-${service.id}">
+                            <strong>${service.name}</strong> - ${service.duration}min - ${service.price}грн
+                            <br><small>${service.description}</small>
+                        </label>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading services:', error);
+                document.getElementById('services-container').innerHTML = '<div class="error">Error loading services</div>';
+            }
+        }
+
+        // Handle service selection change
+        function handleServiceChange(serviceId) {
+            const checkbox = document.getElementById(`service-${serviceId}`);
+            const service = allServices.find(s => s.id == serviceId);
+            
+            if (checkbox.checked) {
+                selectedServices.push(service);
+            } else {
+                selectedServices = selectedServices.filter(s => s.id != serviceId);
+            }
+            
+            updateSummary();
+        }
+
+        // Update summary
+        function updateSummary() {
+            const summaryDiv = document.getElementById('services-summary');
+            const listDiv = document.getElementById('selected-services-list');
+            const durationSpan = document.getElementById('total-duration');
+            const priceSpan = document.getElementById('total-price');
+            const warningDiv = document.getElementById('duration-warning');
+            const testBtn = document.getElementById('test-availability');
+            
+            if (selectedServices.length === 0) {
+                summaryDiv.style.display = 'none';
+                return;
+            }
+            
+            summaryDiv.style.display = 'block';
+            
+            // Update selected services list
+            listDiv.innerHTML = selectedServices.map(service => `
+                <div>- ${service.name} (${service.duration}min, ${service.price}грн)</div>
+            `).join('');
+            
+            // Calculate totals
+            const duration = selectedServices.reduce((sum, service) => sum + service.duration, 0);
+            const price = selectedServices.reduce((sum, service) => sum + parseInt(service.price), 0);
+            
+            durationSpan.textContent = `${duration} хв`;
+            durationSpan.className = duration > 120 ? 'error' : 'success';
+            priceSpan.textContent = `${price} грн`;
+            
+            // Show/hide warning and enable/disable button
+            if (duration > 120) {
+                warningDiv.style.display = 'block';
+                testBtn.disabled = true;
+            } else {
+                warningDiv.style.display = 'none';
+                testBtn.disabled = false;
+            }
+        }
+
+        // Test availability
+        async function testAvailability() {
+            const resultsDiv = document.getElementById('availability-results');
+            const serviceIds = selectedServices.map(s => s.id);
+            
+            if (serviceIds.length === 0) {
+                resultsDiv.innerHTML = '<div class="error">Please select at least one service</div>';
+                return;
+            }
+            
+            try {
+                resultsDiv.innerHTML = '<div>Testing availability...</div>';
+                
+                const response = await fetch(`${API_BASE}/masters/5/availability?serviceIds=${serviceIds.join(',')}&date=2025-11-06`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Availability Test Passed</h3>
+                            <div><strong>Services:</strong> ${selectedServices.map(s => s.name).join(', ')}</div>
+                            <div><strong>Total Duration:</strong> ${selectedServices.reduce((sum, s) => sum + s.duration, 0)}min</div>
+                            <div><strong>Available Time Slots:</strong></div>
+                            <div>${data.data.timeSlots.join(', ')}</div>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Availability Test Failed</h3>
+                            <div><strong>Error:</strong> ${data.error?.message || data.message || 'Unknown error'}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize
+        loadServices();
+        document.getElementById('test-availability').addEventListener('click', testAvailability);
+    </script>
+</body>
+</html>
