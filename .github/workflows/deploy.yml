@@ -63,8 +63,36 @@ jobs:
       - name: Build and deploy with Docker Compose
         working-directory: deploy-${{ github.sha }}
         run: |
-          docker compose down --remove-orphans
-          docker compose up -d --build
+          # Use a fixed project name 'shanails' to ensure we update existing containers
+          # instead of creating new ones in a new namespace.
+          docker compose -p shanails down --remove-orphans
+          docker compose -p shanails up -d --build
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for services to start..."
+          sleep 20
+          
+          # Check specific critical services
+          SERVICES=("backend" "frontend" "traefik" "n8n" "bot" "db")
+          FAILED=0
+          
+          for service in "${SERVICES[@]}"; do
+            # Check if service is running (Up)
+            if ! docker compose -p shanails ps | grep "$service" | grep "Up"; then
+              echo "Error: Service $service is not running!"
+              docker compose -p shanails logs $service
+              FAILED=1
+            else
+              echo "Service $service is running."
+            fi
+          done
+          
+          if [ $FAILED -eq 1 ]; then
+            exit 1
+          fi
+          
+          echo "All services are running successfully!"
 
       - name: Cleanup old deployment directories
         run: |
