@@ -75,11 +75,11 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       DEBUG: ${DEBUG:-false}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      ROOT_PATH: /api
+
     depends_on:
       db:
         condition: service_healthy
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --root-path /api
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
     networks:
       - default
       - traefik_net
@@ -89,6 +89,7 @@ services:
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=mytlschallenge"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      - "traefik.docker.network=shanails_traefik_net"
 
   # Service 5: Telegram Bot
   bot:
@@ -119,6 +120,7 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=mytlschallenge"
       - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+      - "traefik.docker.network=shanails_traefik_net"
 
 volumes:
   postgres_data:
