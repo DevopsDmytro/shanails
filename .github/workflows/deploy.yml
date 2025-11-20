@@ -47,6 +47,9 @@ jobs:
       - name: Stop old bot container
         run: docker stop manicure-bot || true && docker rm manicure-bot || true
 
+      - name: Ensure Traefik network exists
+        run: docker network create n8n_default || true
+
       - name: Build and deploy with Docker Compose
         working-directory: deploy-${{ github.sha }}
         run: |
