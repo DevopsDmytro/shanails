@@ -46,6 +46,9 @@ jobs:
           echo "User ID: $(id)"
           echo "Groups: $(groups)"
 
+      - name: Stop old bot container
+        run: docker stop manicure-bot || true && docker rm manicure-bot || true
+
       - name: Build and deploy with Docker Compose
         run: |
           docker compose down --remove-orphans
