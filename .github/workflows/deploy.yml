@@ -11,6 +11,12 @@ jobs:
     environment: production
 
     steps:
+      - name: Clean workspace
+        run: |
+          cd $GITHUB_WORKSPACE || true
+          sudo rm -rf letsencrypt || true
+          sudo rm -rf deploy-* || true
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
