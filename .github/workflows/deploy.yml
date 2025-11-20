@@ -1,89 +1,49 @@
-name: Deploy Shanails Application
+name: Production Deployment
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: shanails_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: |
-          backend/package-lock.json
-          frontend/package-lock.json
-    
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm ci
-    
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
-    
-    - name: Run backend linting
-      run: |
-        cd backend
-        npm run lint
-    
-    - name: Run backend tests
-      run: |
-        cd backend
-        npm test
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shanails_test
-        JWT_SECRET: test-secret-key-for-testing
-        NODE_ENV: test
-    
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build
-
   deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
+    runs-on: self-hosted
+    environment: production
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Deploy to production
-      run: |
-        echo "Deploying to production..."
-        # Add your deployment commands here
-        # For example, using Docker Compose:
-        # docker-compose down
-        # docker-compose up --build -d
-        # docker system prune -af
-    
-    - name: Run health check
-      run: |
-        echo "Running health check..."
-        # Add health check commands here
-        # curl -f http://localhost/health || exit 1
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "PORT=3000" >> .env
+          echo "NODE_ENV=production" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "LOG_LEVEL=info" >> .env
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
+          echo "MINI_APP_URL=${{ secrets.MINI_APP_URL }}" >> .env
+          echo "NGROK_AUTHTOKEN=${{ secrets.NGROK_AUTHTOKEN }}" >> .env
+          echo "NGROK_URL=${{ secrets.NGROK_URL }}" >> .env
+          echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+          echo "ACME_EMAIL=${{ secrets.ACME_EMAIL }}" >> .env
+          echo "N8N_HOST=${{ secrets.N8N_HOST }}" >> .env
+          echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> .env
+          echo "GENERIC_TIMEZONE=Europe/Kiev" >> .env
+          echo "MAX_SERVICES_PER_APPOINTMENT=3" >> .env
+          echo "MAX_APPOINTMENTS_PER_DAY=50" >> .env
+          echo "SALON_NAME=Shanails Nail Studio" >> .env
+          echo "SALON_ADDRESS=Київ, вул. Хрещатик, 1" >> .env
+          echo "SALON_PHONE=+380636720373" >> .env
+          echo "SALON_INSTAGRAM=@shanails_studio" >> .env
+
+      - name: Build and deploy with Docker Compose
+        run: |
+          docker compose down --remove-orphans
+          docker compose up -d --build
+
+      - name: Prune unused Docker images
+        run: docker image prune -f
