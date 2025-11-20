@@ -60,8 +60,10 @@ export interface Appointment {
 	updated_at: string;
 }
 
+import { browser } from '$app/environment';
+
 // Base API configuration
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL = browser ? '/api/v1' : 'http://backend:8000/api/v1';
 
 // Generic API request function
 async function apiRequest<T>(
@@ -69,7 +71,7 @@ async function apiRequest<T>(
 	options: RequestInit = {}
 ): Promise<T> {
 	const url = `${API_BASE_URL}${endpoint}`;
-	
+
 	const config: RequestInit = {
 		headers: {
 			'Content-Type': 'application/json',
@@ -80,14 +82,14 @@ async function apiRequest<T>(
 
 	try {
 		const response = await fetch(url, config);
-		
+
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({}));
 			throw new Error(
 				errorData.message || `HTTP error! status: ${response.status}`
 			);
 		}
-		
+
 		return await response.json();
 	} catch (error) {
 		if (error instanceof Error) {
@@ -99,7 +101,7 @@ async function apiRequest<T>(
 
 // Masters API
 export async function getMasters(): Promise<Master[]> {
-	return apiRequest<Master[]>('/masters');
+	return apiRequest<Master[]>('/masters/');
 }
 
 export async function getMaster(id: number): Promise<Master> {
@@ -138,7 +140,7 @@ export async function getService(id: number): Promise<Service> {
 export async function createAppointment(
 	data: CreateAppointmentRequest
 ): Promise<Appointment> {
-	return apiRequest<Appointment>('/appointments', {
+	return apiRequest<Appointment>('/appointments/', {
 		method: 'POST',
 		body: JSON.stringify(data),
 	});
@@ -157,9 +159,9 @@ export async function getAppointments(params?: {
 	if (params?.status) searchParams.append('status', params.status);
 	if (params?.from_date) searchParams.append('from_date', params.from_date);
 	if (params?.to_date) searchParams.append('to_date', params.to_date);
-	
+
 	const query = searchParams.toString();
-	return apiRequest(`/appointments${query ? `?${query}` : ''}`);
+	return apiRequest(`/appointments/${query ? `?${query}` : ''}`);
 }
 
 export async function cancelAppointment(id: number): Promise<Appointment> {

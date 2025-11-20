@@ -11,9 +11,9 @@ services:
       - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
       - --certificatesresolvers.mytlschallenge.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json
-      # Temporarily disabled due to Let's Encrypt rate limit
-      # - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      # - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --accesslog=true
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
     ports:
       - "80:80"
       - "443:443"
@@ -88,8 +88,6 @@ services:
       - "traefik.http.routers.backend.rule=Host(`${FRONTEND_HOST:-shapovalova.pp.ua}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=mytlschallenge"
-      - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
-      - "traefik.http.routers.backend.middlewares=api-strip"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
 
   # Service 5: Telegram Bot
