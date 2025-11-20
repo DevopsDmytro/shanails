@@ -44,8 +44,15 @@ jobs:
           echo "SALON_PHONE=+380636720373" >> .env
           echo "SALON_INSTAGRAM=@shanails_studio" >> .env
 
-      - name: Stop old bot container
-        run: docker stop manicure-bot || true && docker rm manicure-bot || true
+      - name: Stop old containers
+        run: |
+          docker stop manicure-bot || true
+          docker rm manicure-bot || true
+          docker stop shanails-frontend-1 shanails-backend-1 shanails-db-1 || true
+          docker rm shanails-frontend-1 shanails-backend-1 shanails-db-1 || true
+          # Stop any container using ports 80 and 443
+          docker ps -q --filter "publish=80" | xargs -r docker stop || true
+          docker ps -q --filter "publish=443" | xargs -r docker stop || true
 
       - name: Build and deploy with Docker Compose
         working-directory: deploy-${{ github.sha }}
