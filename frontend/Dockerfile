@@ -1,18 +1,20 @@
-FROM node:20-alpine
-
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install all dependencies (including devDependencies)
 RUN npm install
-
-# Copy source code
 COPY . .
+RUN npm run build
+RUN npm prune --production
 
-# Expose port
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/build build/
+COPY --from=builder /app/node_modules node_modules/
+COPY package.json .
+
+ENV NODE_ENV=production
+ENV PORT=5173
+ENV HOST=0.0.0.0
+
 EXPOSE 5173
-
-# Start development server
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD [ "node", "build" ]

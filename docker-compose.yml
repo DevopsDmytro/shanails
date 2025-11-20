@@ -112,10 +112,6 @@ services:
   # Service 6: Frontend
   frontend:
     build: ./frontend
-
-    command: npm run dev -- --host
-    environment:
-      - NODE_ENV=development
     networks:
       - default
       - traefik_net
