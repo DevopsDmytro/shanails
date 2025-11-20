@@ -94,6 +94,44 @@ jobs:
           
           echo "All services are running successfully!"
 
+      - name: Seed database (if empty)
+        run: |
+          echo "Checking if database needs seeding..."
+          MASTER_COUNT=$(docker exec shanails-db-1 psql -U postgres -d shanails -t -c "SELECT COUNT(*) FROM master;")
+          
+          if [ "$MASTER_COUNT" -eq "0" ]; then
+            echo "Database is empty. Seeding..."
+            docker exec shanails-backend-1 python seed.py
+            echo "✅ Database seeded successfully"
+          else
+            echo "Database already has data ($MASTER_COUNT masters). Skipping seed."
+          fi
+
+      - name: Health check endpoints
+        run: |
+          echo "Waiting for services to be fully ready..."
+          sleep 10
+          
+          # Check API health
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.FRONTEND_HOST }}/api/v1/masters/ || echo "000")
+          
+          if [ "$API_STATUS" = "200" ]; then
+            echo "✅ API is healthy (HTTP $API_STATUS)"
+          else
+            echo "❌ API health check failed (HTTP $API_STATUS)"
+            docker compose -p shanails logs backend
+            exit 1
+          fi
+          
+          # Check frontend
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.FRONTEND_HOST }}/ || echo "000")
+          
+          if [ "$FRONTEND_STATUS" = "200" ]; then
+            echo "✅ Frontend is healthy (HTTP $FRONTEND_STATUS)"
+          else
+            echo "⚠️  Frontend returned HTTP $FRONTEND_STATUS (may be normal for SSR)"
+          fi
+
       - name: Cleanup old deployment directories
         run: |
           cd $HOME/actions-runner/_work/shanails || exit 0
