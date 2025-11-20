@@ -13,11 +13,14 @@ jobs:
     steps:
       - name: Clean workspace
         run: |
+          sudo chown -R $(whoami):$(whoami) $GITHUB_WORKSPACE || true
           sudo rm -rf $GITHUB_WORKSPACE/* || true
-          sudo rm -rf $GITHUB_WORKSPACE/.* 2>/dev/null || true
+          sudo rm -rf $GITHUB_WORKSPACE/.git || true
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          clean: false
 
       - name: Create .env file
         run: |
