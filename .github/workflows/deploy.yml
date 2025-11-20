@@ -40,10 +40,16 @@ jobs:
           echo "SALON_PHONE=+380636720373" >> .env
           echo "SALON_INSTAGRAM=@shanails_studio" >> .env
 
+      - name: Debug User Permissions
+        run: |
+          echo "Current User: $(whoami)"
+          echo "User ID: $(id)"
+          echo "Groups: $(groups)"
+
       - name: Build and deploy with Docker Compose
         run: |
-          docker compose down --remove-orphans
-          docker compose up -d --build
+          sudo docker compose down --remove-orphans
+          sudo docker compose up -d --build
 
       - name: Prune unused Docker images
-        run: docker image prune -f
+        run: sudo docker image prune -f
