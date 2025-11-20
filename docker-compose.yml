@@ -78,9 +78,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --root-path /api
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --root-path /api
     networks:
       - default
       - traefik_net
@@ -105,8 +103,6 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
-    volumes:
-      - ./backend:/app
     command: python bot.py
     networks:
       - default
@@ -115,10 +111,7 @@ services:
   # Service 6: Frontend
   frontend:
     build: ./frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    working_dir: /app
+
     command: npm run dev -- --host
     environment:
       - NODE_ENV=development
