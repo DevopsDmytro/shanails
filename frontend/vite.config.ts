@@ -4,11 +4,12 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
-		host: true, // Allow access from any host
+		host: true,
 		port: 5173,
+		allowedHosts: ['app.shapovalova.pp.ua', 'localhost', '127.0.0.1'],
 		proxy: {
 			'/api': {
-				target: 'http://localhost:8000',
+				target: 'http://backend:8000',
 				changeOrigin: true,
 				secure: false,
 				rewrite: (path) => path
