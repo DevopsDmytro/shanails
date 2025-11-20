@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
+		host: true, // Allow access from any host
 		port: 5173,
 		proxy: {
 			'/api': {
