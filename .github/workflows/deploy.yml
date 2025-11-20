@@ -11,18 +11,13 @@ jobs:
     environment: production
 
     steps:
-      - name: Clean workspace
-        run: |
-          sudo chown -R $(whoami):$(whoami) $GITHUB_WORKSPACE || true
-          sudo rm -rf $GITHUB_WORKSPACE/* || true
-          sudo rm -rf $GITHUB_WORKSPACE/.git || true
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          clean: false
+          path: deploy-${{ github.sha }}
 
       - name: Create .env file
+        working-directory: deploy-${{ github.sha }}
         run: |
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
@@ -37,6 +32,7 @@ jobs:
           echo "NGROK_AUTHTOKEN=${{ secrets.NGROK_AUTHTOKEN }}" >> .env
           echo "NGROK_URL=${{ secrets.NGROK_URL }}" >> .env
           echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+          echo "FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}" >> .env
           echo "ACME_EMAIL=${{ secrets.ACME_EMAIL }}" >> .env
           echo "N8N_HOST=${{ secrets.N8N_HOST }}" >> .env
           echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> .env
@@ -48,19 +44,19 @@ jobs:
           echo "SALON_PHONE=+380636720373" >> .env
           echo "SALON_INSTAGRAM=@shanails_studio" >> .env
 
-      - name: Debug User Permissions
-        run: |
-          echo "Current User: $(whoami)"
-          echo "User ID: $(id)"
-          echo "Groups: $(groups)"
-
       - name: Stop old bot container
         run: docker stop manicure-bot || true && docker rm manicure-bot || true
 
       - name: Build and deploy with Docker Compose
+        working-directory: deploy-${{ github.sha }}
         run: |
           docker compose down --remove-orphans
           docker compose up -d --build
+
+      - name: Cleanup old deployment directories
+        run: |
+          cd $HOME/actions-runner/_work/shanails || exit 0
+          ls -t | grep "^deploy-" | tail -n +3 | xargs -r sudo rm -rf
 
       - name: Prune unused Docker images
         run: docker image prune -f
