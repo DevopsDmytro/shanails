@@ -97,7 +97,10 @@ jobs:
       - name: Seed database (if empty)
         run: |
           echo "Checking if database needs seeding..."
-          MASTER_COUNT=$(docker exec shanails-db-1 psql -U postgres -d shanails -t -c "SELECT COUNT(*) FROM master;")
+          # Check master count using backend container's Python environment
+          MASTER_COUNT=$(docker exec shanails-backend-1 python -c "import os; from sqlalchemy import create_engine, text; engine = create_engine(os.getenv('DATABASE_URL')); conn = engine.connect(); result = conn.execute(text('SELECT COUNT(*) FROM master')); print(result.scalar())" 2>/dev/null || echo "0")
+          
+          echo "Current master count: $MASTER_COUNT"
           
           if [ "$MASTER_COUNT" -eq "0" ]; then
             echo "Database is empty. Seeding..."
