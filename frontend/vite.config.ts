@@ -6,7 +6,7 @@ export default defineConfig({
 	server: {
 		host: true,
 		port: 5173,
-		allowedHosts: ['app.shapovalova.pp.ua', 'localhost', '127.0.0.1'],
+		allowedHosts: ['test.shapovalova.pp.ua', 'app.shapovalova.pp.ua', 'localhost', '127.0.0.1'],
 		proxy: {
 			'/api': {
 				target: 'http://backend:8000',

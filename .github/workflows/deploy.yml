@@ -35,11 +35,8 @@ jobs:
           echo "LOG_LEVEL=info" >> .env
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
           echo "MINI_APP_URL=${{ secrets.MINI_APP_URL }}" >> .env
-          echo "NGROK_AUTHTOKEN=${{ secrets.NGROK_AUTHTOKEN }}" >> .env
-          echo "NGROK_URL=${{ secrets.NGROK_URL }}" >> .env
           echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
           echo "FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}" >> .env
-          echo "ACME_EMAIL=${{ secrets.ACME_EMAIL }}" >> .env
           echo "N8N_HOST=${{ secrets.N8N_HOST }}" >> .env
           echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> .env
           echo "GENERIC_TIMEZONE=Europe/Kiev" >> .env

@@ -22,6 +22,8 @@ class User(Base):
     name = Column(String, index=True)
     phone = Column(String, nullable=True)
     role = Column(String, default="CLIENT")  # 'CLIENT' or 'ADMIN'
+    is_registered = Column(Boolean, default=False)  # NEW: Track registration completion
+    registration_completed_at = Column(DateTime, nullable=True)  # NEW: When registration was completed
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships

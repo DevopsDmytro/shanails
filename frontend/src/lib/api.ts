@@ -1,5 +1,14 @@
 // API types and utilities for the salon booking system
 
+export interface User {
+	id: number;
+	telegram_id: number | null;
+	name: string;
+	phone: string | null;
+	role: string;
+	is_registered: boolean;
+}
+
 export interface Master {
 	id: number;
 	user_id: number;
@@ -58,6 +67,23 @@ export interface Appointment {
 	notes?: string;
 	created_at: string;
 	updated_at: string;
+}
+
+export interface TelegramAuthResponse {
+	user: User;
+	token: string | null;
+	needs_registration: boolean;
+}
+
+export interface RegisterRequest {
+	name: string;
+	phone: string;
+}
+
+export interface RegisterResponse {
+	user: User;
+	token: string;
+	needs_registration: boolean;
 }
 
 import { browser } from '$app/environment';
@@ -167,5 +193,32 @@ export async function getAppointments(params?: {
 export async function cancelAppointment(id: number): Promise<Appointment> {
 	return apiRequest<Appointment>(`/appointments/${id}`, {
 		method: 'DELETE',
+	});
+}
+
+// Authentication API
+export async function telegramAuth(initData: string): Promise<TelegramAuthResponse> {
+	return apiRequest<TelegramAuthResponse>('/auth/telegram/init', {
+		method: 'POST',
+		body: JSON.stringify({ init_data: initData }),
+	});
+}
+
+export async function register(
+	telegramId: number,
+	name: string,
+	phone: string
+): Promise<RegisterResponse> {
+	return apiRequest<RegisterResponse>(`/auth/register?telegram_id=${telegramId}`, {
+		method: 'POST',
+		body: JSON.stringify({ name, phone }),
+	});
+}
+
+export async function getCurrentUser(token: string): Promise<User> {
+	return apiRequest<User>('/auth/me', {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
 	});
 }

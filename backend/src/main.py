@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .database import engine, create_db_and_tables
-from .api.endpoints import masters, services, appointments
+from .api.endpoints import masters, services, appointments, auth
 
 
 @asynccontextmanager
@@ -29,6 +29,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)  # Auth router already has prefix="/api/v1/auth" defined
 app.include_router(masters.router, prefix="/api/v1/masters", tags=["masters"])
 app.include_router(services.router, prefix="/api/v1/services", tags=["services"])
 app.include_router(appointments.router, prefix="/api/v1/appointments", tags=["appointments"])

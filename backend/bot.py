@@ -17,35 +17,22 @@ logger = logging.getLogger(__name__)
 
 # Get configuration from environment
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-WEBAPP_URL = os.getenv('WEBAPP_URL', 'http://localhost:5173')
+WEBAPP_URL = os.getenv('MINI_APP_URL', 'http://localhost:5173')
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Handle /start command.
-    Send welcome message with WebApp button.
+    Send welcome message. User can use the menu button to open the WebApp.
     """
     user = update.effective_user
     logger.info(f"User {user.id} ({user.first_name}) started the bot")
-    
-    # Create WebApp button
-    webapp_button = KeyboardButton(
-        text="📅 Записатися",
-        web_app=WebAppInfo(url=WEBAPP_URL)
-    )
-    
-    # Create keyboard with WebApp button
-    keyboard = ReplyKeyboardMarkup(
-        [[webapp_button]],
-        resize_keyboard=True
-    )
     
     # Send welcome message
     await update.message.reply_text(
         f"Вітаємо, {user.first_name}! 👋\n\n"
         f"Ласкаво просимо до Shanails Nail Studio!\n\n"
-        f"Натисніть кнопку нижче, щоб записатися на процедуру:",
-        reply_markup=keyboard
+        f"Натисніть кнопку Menu (☰) внизу ліворуч, щоб записатися на процедуру."
     )
 
 
