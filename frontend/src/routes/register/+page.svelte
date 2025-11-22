@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { get } from "svelte/store";
     import { goto } from "$app/navigation";
     import { authStore } from "../../stores/auth";
     import { register } from "$lib/api";
@@ -20,23 +21,42 @@
         initTelegramWebApp();
 
         // Check if running in Telegram
-        if (!isTelegram()) {
-            error = "This app must be opened from Telegram";
-            return;
-        }
-
-        // Get Telegram user data
-        telegramUser = getTelegramUser();
-        if (!telegramUser) {
-            error = "Could not get Telegram user data";
-            return;
-        }
-
-        // Pre-fill name from Telegram
-        if (telegramUser.first_name) {
-            name = telegramUser.first_name;
-            if (telegramUser.last_name) {
-                name += " " + telegramUser.last_name;
+        if (isTelegram()) {
+            // Get Telegram user data
+            telegramUser = getTelegramUser();
+            if (telegramUser) {
+                // Pre-fill name from Telegram
+                if (telegramUser.first_name) {
+                    name = telegramUser.first_name;
+                    if (telegramUser.last_name) {
+                        name += " " + telegramUser.last_name;
+                    }
+                }
+            }
+        } else {
+            // If not in Telegram, check if we are already authenticated (e.g. via magic link)
+            const currentUser = get(authStore).user;
+            if (currentUser) {
+                // If we have a user from authStore (set by callback), we can proceed
+                // We might not have the telegramUser object for UI pre-fill, but we have the ID in the backend
+                // We can try to pre-fill name from the authStore user if available
+                if (currentUser.name) {
+                    name = currentUser.name;
+                }
+                // Mock telegramUser for the submit function to work, using data from authStore
+                telegramUser = {
+                    id: currentUser.telegram_id,
+                    first_name: currentUser.name
+                        ? currentUser.name.split(" ")[0]
+                        : "",
+                    last_name: currentUser.name
+                        ? currentUser.name.split(" ").slice(1).join(" ")
+                        : "",
+                };
+            } else {
+                error =
+                    "This app must be opened from Telegram or via a valid login link";
+                return;
             }
         }
     });
