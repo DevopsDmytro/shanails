@@ -5,8 +5,16 @@ Handles /start command and provides WebApp button to launch booking interface.
 """
 import os
 import logging
-from telegram import Update, WebAppInfo, KeyboardButton, ReplyKeyboardMarkup
+import asyncio
+from datetime import datetime
+from telegram import Update, WebAppInfo, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
+import jwt
+
+# Import database and models
+from src.database import SessionLocal
+from src.models import User
+from src.api.endpoints.auth import generate_jwt_token
 
 # Configure logging
 logging.basicConfig(
@@ -17,31 +25,88 @@ logger = logging.getLogger(__name__)
 
 # Get configuration from environment
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-WEBAPP_URL = os.getenv('MINI_APP_URL', 'http://localhost:5173')
+WEBAPP_URL = os.getenv('WEBAPP_URL', 'http://localhost:5173')
+JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Handle /start command.
-    Send welcome message. User can use the menu button to open the WebApp.
+    If args contain 'login', generate a magic link.
+    Otherwise, send welcome message with WebApp button.
     """
     user = update.effective_user
-    logger.info(f"User {user.id} ({user.first_name}) started the bot")
+    logger.info(f"User {user.id} ({user.first_name}) started the bot with args: {context.args}")
     
+    # Check for login argument
+    if context.args and context.args[0] == 'login':
+        await handle_login(update, context)
+        return
+
     # Send welcome message
     await update.message.reply_text(
-        f"Вітаємо, {user.first_name}! 👋\n\n"
-        f"Ласкаво просимо до Shanails Nail Studio!\n\n"
-        f"Натисніть кнопку Menu (☰) внизу ліворуч, щоб записатися на процедуру."
+        f"Привіт, {user.first_name}! 👋\n\n"
+        f"Я бот Shanails Studio.\n\n"
+        f"📅 **Запис:** Тисни кнопку **Tests** (Menu) зліва внизу.\n"
+        f"🔐 **Вхід на сайт:** Введи команду /login"
     )
+
+
+async def handle_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle login request from website."""
+    telegram_user = update.effective_user
+    
+    # Get database session
+    db = SessionLocal()
+    
+    try:
+        # Find or create user
+        user = db.query(User).filter(User.telegram_id == telegram_user.id).first()
+        
+        if not user:
+            logger.info(f"Creating new user for login: {telegram_user.id}")
+            user = User(
+                telegram_id=telegram_user.id,
+                name=f"{telegram_user.first_name} {telegram_user.last_name or ''}".strip(),
+                role="CLIENT",
+                is_registered=False
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        
+        # Generate JWT token
+        token = generate_jwt_token(user)
+        
+        # Create magic link
+        magic_link = f"{WEBAPP_URL}/auth/callback?token={token}"
+        
+        # Send link to user with both button and copyable text
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔐 Увійти на сайт", url=magic_link)]
+        ])
+        
+        await update.message.reply_text(
+            f"Натисніть кнопку нижче для швидкого входу, або скопіюйте посилання для вставки у потрібний браузер:\n\n"
+            f"🔗 `{magic_link}`\n\n"
+            f"_Посилання дійсне 24 години_",
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error handling login: {e}")
+        await update.message.reply_text("❌ Помилка входу. Спробуйте пізніше.")
+    finally:
+        db.close()
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /help command."""
     await update.message.reply_text(
-        "🔹 /start - Почати роботу з ботом\n"
-        "🔹 /help - Показати це повідомлення\n\n"
-        "Використовуйте кнопку 'Записатися' для бронювання процедур."
+        "🔹 /start - Головне меню\n"
+        "🔹 /login - Вхід на сайт\n"
+        "🔹 /help - Допомога"
     )
 
 
@@ -56,6 +121,7 @@ def main() -> None:
     
     # Register handlers
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("login", handle_login))
     application.add_handler(CommandHandler("help", help_command))
     
     # Start bot

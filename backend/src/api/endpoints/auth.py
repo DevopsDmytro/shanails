@@ -1,7 +1,7 @@
 """
 Authentication endpoints for Telegram WebApp
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, validator
 from typing import Optional
@@ -179,7 +179,7 @@ async def register(
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(
-    authorization: str,
+    authorization: str = Header(...),
     db: Session = Depends(get_session)
 ):
     """
