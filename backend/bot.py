@@ -7,7 +7,7 @@ import os
 import logging
 import asyncio
 from datetime import datetime
-from telegram import Update, WebAppInfo, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, WebAppInfo, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup, MenuButtonWebApp
 from telegram.ext import Application, CommandHandler, ContextTypes
 import jwt
 
@@ -124,16 +124,17 @@ def main() -> None:
     application.add_handler(CommandHandler("login", handle_login))
     application.add_handler(CommandHandler("help", help_command))
     
-    # Start bot
-    logger.info("Starting bot...")
-    
-    # Set menu button
+    # Set menu button on startup
     async def post_init(app: Application) -> None:
         await app.bot.set_chat_menu_button(
-            menu_button=WebAppInfo(url=WEBAPP_URL)
+            menu_button=MenuButtonWebApp(text="Записатися", web_app=WebAppInfo(url=WEBAPP_URL))
         )
-
-    application.run_polling(allowed_updates=Update.ALL_TYPES, post_init=post_init)
+    
+    application.post_init = post_init
+    
+    # Start bot
+    logger.info("Starting bot...")
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == '__main__':
