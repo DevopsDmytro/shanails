@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .database import engine, create_db_and_tables
-from .api.endpoints import masters, services, appointments, auth
+from .api.endpoints import masters, services, appointments, auth, admin
 
 
 @asynccontextmanager
@@ -33,6 +33,7 @@ app.include_router(auth.router)  # Auth router already has prefix="/api/v1/auth"
 app.include_router(masters.router, prefix="/api/v1/masters", tags=["masters"])
 app.include_router(services.router, prefix="/api/v1/services", tags=["services"])
 app.include_router(appointments.router, prefix="/api/v1/appointments", tags=["appointments"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 
 
 @app.get("/health")

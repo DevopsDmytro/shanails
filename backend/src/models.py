@@ -22,8 +22,19 @@ class User(Base):
     name = Column(String, index=True)
     phone = Column(String, nullable=True)
     role = Column(String, default="CLIENT")  # 'CLIENT' or 'ADMIN'
-    is_registered = Column(Boolean, default=False)  # NEW: Track registration completion
-    registration_completed_at = Column(DateTime, nullable=True)  # NEW: When registration was completed
+    is_registered = Column(Boolean, default=False)  # Track registration completion
+    registration_completed_at = Column(DateTime, nullable=True)  # When registration was completed
+    
+    # Cancellation tracking
+    cancellations_this_year = Column(Integer, default=0)
+    last_cancellation_reset = Column(DateTime, nullable=True)
+    
+    # Change tracking
+    last_time_slot_change = Column(DateTime, nullable=True)
+    
+    # Admin notes
+    notes = Column(String, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -50,9 +61,12 @@ class Service(Base):
     
     id = Column(Integer, primary_key=True)
     name = Column(String, index=True)
-    category = Column(String, index=True)  # Add category field
+    category = Column(String, index=True)
+    description = Column(String, nullable=True)  # Service description
     price = Column(Float, nullable=False)
     duration = Column(Integer, nullable=False)  # in minutes
+    image_url = Column(String, nullable=True)  # Service image
+    is_popular = Column(Boolean, default=False)  # Highlight popular services
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
@@ -69,6 +83,8 @@ class Schedule(Base):
     start_time = Column(String, nullable=False)  # "10:00"
     end_time = Column(String, nullable=False)    # "20:00"
     is_available = Column(Boolean, default=True)
+    is_break = Column(Boolean, default=False)  # Mark as break time
+    note = Column(String, nullable=True)  # Schedule note
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
