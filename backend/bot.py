@@ -126,7 +126,14 @@ def main() -> None:
     
     # Start bot
     logger.info("Starting bot...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    
+    # Set menu button
+    async def post_init(app: Application) -> None:
+        await app.bot.set_chat_menu_button(
+            menu_button=WebAppInfo(url=WEBAPP_URL)
+        )
+
+    application.run_polling(allowed_updates=Update.ALL_TYPES, post_init=post_init)
 
 
 if __name__ == '__main__':
