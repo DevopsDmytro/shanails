@@ -62,7 +62,7 @@ jobs:
         run: |
           # Export Vite build-time environment variables
           export VITE_DEBUG_MODE=false
-          export VITE_TELEGRAM_BOT_USERNAME=sha_nails
+          export VITE_TELEGRAM_BOT_USERNAME=sha_nails_bot
           export VITE_API_URL=/api/v1
           
           # Use a fixed project name 'shanails' to ensure we update existing containers
