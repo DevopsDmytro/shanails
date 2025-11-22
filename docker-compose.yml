@@ -114,7 +114,12 @@ services:
 
   # Service 6: Frontend
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_DEBUG_MODE: ${VITE_DEBUG_MODE:-false}
+        VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME:-sha_nails_test}
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
     networks:
       - default
       - traefik_net

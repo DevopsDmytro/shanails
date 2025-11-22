@@ -8,6 +8,6 @@ export const config = {
 
     // Feature flags
     features: {
-        debugMode: import.meta.env.DEV,
+        debugMode: import.meta.env.VITE_DEBUG_MODE === 'true' || import.meta.env.DEV,
     }
 };

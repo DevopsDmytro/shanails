@@ -117,25 +117,27 @@
 	{/if}
 </main>
 
-<!-- Debug Overlay -->
-<div class="debug-overlay">
-	<details open>
-		<summary>DEBUG MODE (Click to toggle)</summary>
-		<pre>
+<!-- Debug Overlay (only in development/test) -->
+{#if config.features.debugMode}
+	<div class="debug-overlay">
+		<details open>
+			<summary>DEBUG MODE (Click to toggle)</summary>
+			<pre>
 isTelegram: {isTelegram()}
 Version: {typeof window !== "undefined" && window.Telegram?.WebApp?.version}
 Platform: {typeof window !== "undefined" && window.Telegram?.WebApp?.platform}
 InitData Present: {!!getInitData()}
 InitData Length: {getInitData()?.length || 0}
 Unsafe User: {JSON.stringify(
-				(typeof window !== "undefined" &&
-					window.Telegram?.WebApp?.initDataUnsafe?.user) ||
-					"None",
-			)}
+					(typeof window !== "undefined" &&
+						window.Telegram?.WebApp?.initDataUnsafe?.user) ||
+						"None",
+				)}
 Auth Store: {JSON.stringify($authStore, null, 2)}
-		</pre>
-	</details>
-</div>
+			</pre>
+		</details>
+	</div>
+{/if}
 
 <style>
 	main {
