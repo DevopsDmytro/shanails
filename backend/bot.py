@@ -43,12 +43,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await handle_login(update, context)
         return
 
+    # Create keyboard with WebApp button
+    keyboard = ReplyKeyboardMarkup.from_button(
+        KeyboardButton(
+            text="📅 Записатися",
+            web_app=WebAppInfo(url=WEBAPP_URL)
+        ),
+        resize_keyboard=True
+    )
+
     # Send welcome message
     await update.message.reply_text(
         f"Привіт, {user.first_name}! 👋\n\n"
         f"Я бот Shanails Studio.\n\n"
-        f"📅 **Запис:** Тисни кнопку **Tests** (Menu) зліва внизу.\n"
-        f"🔐 **Вхід на сайт:** Введи команду /login"
+        f"📅 **Запис:** Тисни кнопку **Записатися** внизу.\n"
+        f"🔐 **Вхід на сайт:** Введи команду /login",
+        reply_markup=keyboard,
+        parse_mode="Markdown"
     )
 
 
