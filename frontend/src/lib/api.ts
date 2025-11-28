@@ -222,3 +222,34 @@ export async function getCurrentUser(token: string): Promise<User> {
 		},
 	});
 }
+
+// Client Appointment Management
+export async function getMyAppointments(): Promise<{ appointments: Appointment[] }> {
+	return apiRequest('/appointments/my');
+}
+
+export async function checkCanCancel(appointmentId: number): Promise<{ allowed: boolean; reason: string | null }> {
+	return apiRequest(`/appointments/${appointmentId}/can-cancel`);
+}
+
+export async function checkCanReschedule(appointmentId: number): Promise<{ allowed: boolean; reason: string | null }> {
+	return apiRequest(`/appointments/${appointmentId}/can-reschedule`);
+}
+
+export async function rescheduleAppointment(
+	appointmentId: number,
+	newStartTime: string
+): Promise<{ message: string; appointment: Appointment }> {
+	return apiRequest(`/appointments/${appointmentId}`, {
+		method: 'PATCH',
+		body: JSON.stringify({ start_time: newStartTime }),
+	});
+}
+
+export async function cancelMyAppointment(
+	appointmentId: number
+): Promise<{ message: string; remaining_cancellations: number }> {
+	return apiRequest(`/appointments/${appointmentId}`, {
+		method: 'DELETE',
+	});
+}

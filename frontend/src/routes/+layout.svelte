@@ -110,6 +110,9 @@
 				{/if}
 			</header>
 			<nav>
+				{#if $authStore.isAuthenticated}
+					<a href="/my-bookings">Мої записи</a>
+				{/if}
 				<a href="/booking">Записатися</a>
 			</nav>
 		{/if}
