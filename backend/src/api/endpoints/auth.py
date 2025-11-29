@@ -18,7 +18,9 @@ from ...utils.validators import validate_ukrainian_phone, validate_name
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 # JWT Configuration
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is not set")
 JWT_ALGORITHM = "HS256"
 
 
